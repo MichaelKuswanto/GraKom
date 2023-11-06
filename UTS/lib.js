@@ -1,30 +1,54 @@
 import * as lib from "./index.js";
 import * as trf from "./matrix_transform.js";
 
-export function table(){
-    $(document).ready(function(){
-            $.ajax({
-                url:"cereal.csv",
-                dataType:"text",
-                success:function(data) {
-                    var cereal_data = data.split(/\r?\n|\r/);
-                    var table_data = '<table class="table table-bordered table-striped">';
-                    for(var count = 0; count<cereal_data.length; count++){
-                        var cell_data = cereal_data[count].split(",");
-                        table_data += '<tr>';
-                        for(var cell_count=0; cell_count<cell_data.length; cell_count++){
-                            if(count === 0) {
-                                table_data += '<th>'+cell_data[cell_count]+'</th>';
-                            }
-                            else {
-                                table_data += '<td>'+cell_data[cell_count]+'</td>';
-                            }
-                        }
-                        table_data += '</tr>';
-                    }
-                    table_data += '</table>';
-                    $('#cereal_table').html(table_data);
-                }
-            });
+export function visualisasi(){
+    const myForm = document.getElementById("myForm");
+    const csvFile = document.getElementById("csvFile");
+    myForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const input = csvFile.files[0];
+
+        if (!input) {
+            console.error("No file selected");
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            const text = e.target.result;
+            const dataArray = convertCSVToArray(text);
+            
+            let canvas = document.getElementById("mycanvas");
+            let ctx = canvas.getContext("2d");
+            let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            let height = 20
+            for (let i = 1; i < dataArray.length; i++){
+                lib.dda_line(imageData,20, height, dataArray[i][3]*5, height, [0,0,0])
+                height += 5
+                ctx.putImageData(imageData, 0, 0);
+            }
+
+            // Your further processing with imageData or dataArray can be added here
+
+            ctx.putImageData(imageData, 0, 0);
+        };
+
+        reader.onerror = function (error) {
+            console.error(`Error reading the file: ${error}`);
+        };
+
+        reader.readAsText(input);
     });
 }
+
+export function convertCSVToArray(csvText) {
+    const rows = csvText.split('\n');
+    const result = [];
+    for (let i = 0; i < rows.length; i++) {
+        const cols = rows[i].split(',');
+        result.push(cols);
+    }
+    return result;
+}
+
